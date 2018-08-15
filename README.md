@@ -1,0 +1,1 @@
+`protoc  --go_out=plugins=grpc:. protobuf/hello.proto`
