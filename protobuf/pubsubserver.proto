@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+import "protobuf/mygrpc.proto";
+
+package protobuf;
+
+service PubsubServer {
+    rpc Publish (String) returns (String);
+    rpc Subscribe (String) returns (stream String);
+}

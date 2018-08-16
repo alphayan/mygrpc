@@ -16,14 +16,14 @@ import (
 	"google.golang.org/grpc"
 )
 
-type Hel int
+type g int
 
-func (h *Hel) Hello(ctx context.Context, args *protobuf.String) (*protobuf.String, error) {
+func (*g) Hello(ctx context.Context, args *protobuf.String) (*protobuf.String, error) {
 	reply := &protobuf.String{Value: "hello:" + args.GetValue()}
 	time.Sleep(time.Second)
 	return reply, nil
 }
-func (h *Hel) StreamServer(args *protobuf.String, stream protobuf.MyGrpc_StreamServerServer) error {
+func (*g) StreamServer(args *protobuf.String, stream protobuf.MyGrpc_StreamServerServer) error {
 	rs := make([]*protobuf.String, 0, 10)
 	lenrs := cap(rs)
 	if args.GetValue() == "hi" {
@@ -44,7 +44,7 @@ func (h *Hel) StreamServer(args *protobuf.String, stream protobuf.MyGrpc_StreamS
 	}
 	return nil
 }
-func (h *Hel) ClientStream(stream protobuf.MyGrpc_ClientStreamServer) error {
+func (*g) ClientStream(stream protobuf.MyGrpc_ClientStreamServer) error {
 	reply := &protobuf.String{}
 	s := ""
 	for {
@@ -60,7 +60,7 @@ func (h *Hel) ClientStream(stream protobuf.MyGrpc_ClientStreamServer) error {
 	}
 	return nil
 }
-func (h *Hel) Channel(stream protobuf.MyGrpc_ChannelServer) error {
+func (*g) Channel(stream protobuf.MyGrpc_ChannelServer) error {
 	for {
 		args, err := stream.Recv()
 		if err != nil {
@@ -79,7 +79,8 @@ func (h *Hel) Channel(stream protobuf.MyGrpc_ChannelServer) error {
 
 func Run() {
 	grpcServer := grpc.NewServer()
-	protobuf.RegisterMyGrpcServer(grpcServer, new(Hel))
+	protobuf.RegisterMyGrpcServer(grpcServer, new(g))
+	protobuf.RegisterPubsubServerServer(grpcServer, NewPubsubService())
 	lis, err := net.Listen("tcp", ":1234")
 	if err != nil {
 		log.Fatal(err)

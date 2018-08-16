@@ -5,9 +5,10 @@ package protobuf;
 message String {
      string value = 1;
  }
+
 service MyGrpc {
      rpc Hello (String) returns (String);
      rpc StreamServer (String) returns (stream String);
      rpc ClientStream (stream String) returns (String);
      rpc Channel (stream String) returns (stream String);
- }
+}
