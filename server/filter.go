@@ -53,10 +53,17 @@ func filter2(
 }
 
 func filterStream(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
+	log.Println("fileter:", info)
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: %v", r)
 		}
 	}()
-	return handler(srv, stream)
+	as := NewAuth()
+	for _, v := range as {
+		if err := v.Auth(stream.Context()); err == nil {
+			return handler(srv, stream)
+		}
+	}
+	return errors.New("token 验证失败")
 }

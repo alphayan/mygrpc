@@ -97,7 +97,7 @@ func Run() {
 func Conn() *grpc.ClientConn {
 	auth := &Authentication{
 		User:     "alpha",
-		Password: "123456",
+		Password: "1234567",
 	}
 	certificate, err := tls.LoadX509KeyPair("key/client.crt", "key/client.key")
 	if err != nil {
