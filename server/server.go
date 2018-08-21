@@ -13,7 +13,13 @@ import (
 
 	"time"
 
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
+
 	"google.golang.org/grpc"
+
+	"google.golang.org/grpc/credentials"
 )
 
 type g int
@@ -78,7 +84,26 @@ func (*g) Channel(stream protobuf.MyGrpc_ChannelServer) error {
 }
 
 func Run() {
-	grpcServer := grpc.NewServer()
+	certificate, err := tls.LoadX509KeyPair("key/server.crt", "key/server.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = certificate
+	certPool := x509.NewCertPool()
+	ca, err := ioutil.ReadFile("key/ca.crt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if !certPool.AppendCertsFromPEM(ca) {
+		log.Fatal("failed to append ca certs")
+	}
+
+	creds := credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{certificate},
+		ClientAuth:   tls.RequireAndVerifyClientCert, // NOTE: this is optional!
+		ClientCAs:    certPool,
+	})
+	grpcServer := grpc.NewServer(grpc.Creds(creds))
 	protobuf.RegisterMyGrpcServer(grpcServer, new(g))
 	protobuf.RegisterPubsubServerServer(grpcServer, NewPubsubService())
 	lis, err := net.Listen("tcp", ":1234")

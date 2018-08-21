@@ -15,5 +15,6 @@ func main() {
 	}()
 	go client.Sub()
 	go client.Run()
+	defer client.Conn().Close()
 	server.Run()
 }

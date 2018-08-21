@@ -6,18 +6,10 @@ import (
 	"io"
 	"log"
 	"mygrpc/protobuf"
-
-	"google.golang.org/grpc"
 )
 
 func Sub() {
-	conn, err := grpc.Dial("localhost:1234", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	client := protobuf.NewPubsubServerClient(conn)
+	client := protobuf.NewPubsubServerClient(Conn())
 	stream, err := client.Subscribe(context.Background(), &protobuf.String{Value: "golang:"})
 	if err != nil {
 		log.Fatal(err)

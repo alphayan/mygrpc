@@ -9,18 +9,18 @@ import (
 
 	"google.golang.org/grpc"
 
+	"crypto/tls"
+	"crypto/x509"
 	"io"
+	"io/ioutil"
 	"strconv"
 	"time"
+
+	"google.golang.org/grpc/credentials"
 )
 
 func Run() {
-	conn, err := grpc.Dial("localhost:1234", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-	client := protobuf.NewMyGrpcClient(conn)
+	client := protobuf.NewMyGrpcClient(Conn())
 	//双向直接返回
 	s, err := client.Hello(context.Background(), &protobuf.String{Value: "hi"})
 	if err != nil {
@@ -79,4 +79,31 @@ func Run() {
 		}
 		fmt.Println("双向流：", reply.GetValue())
 	}
+}
+
+func Conn() *grpc.ClientConn {
+	certificate, err := tls.LoadX509KeyPair("key/client.crt", "key/client.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	certPool := x509.NewCertPool()
+	ca, err := ioutil.ReadFile("key/ca.crt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if ok := certPool.AppendCertsFromPEM(ca); !ok {
+		log.Fatal("failed to append ca certs")
+	}
+
+	creds := credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{certificate},
+		ServerName:   "server.io", // NOTE: this is required!
+		RootCAs:      certPool,
+	})
+	conn, err := grpc.Dial(":1234", grpc.WithTransportCredentials(creds))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return conn
 }
