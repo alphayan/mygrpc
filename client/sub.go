@@ -9,7 +9,9 @@ import (
 )
 
 func Sub() {
-	client := protobuf.NewPubsubServerClient(Conn())
+	conn := Conn()
+	defer conn.Close()
+	client := protobuf.NewPubsubServerClient(conn)
 	stream, err := client.Subscribe(context.Background(), &protobuf.String{Value: "golang:"})
 	if err != nil {
 		log.Fatal(err)

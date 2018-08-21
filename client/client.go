@@ -19,8 +19,21 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+type Authentication struct {
+	User     string
+	Password string
+}
+
+func (a *Authentication) GetRequestMetadata(context.Context, ...string) (map[string]string, error) {
+	return map[string]string{"user": a.User, "password": a.Password}, nil
+}
+func (a *Authentication) RequireTransportSecurity() bool {
+	return false
+}
 func Run() {
-	client := protobuf.NewMyGrpcClient(Conn())
+	conn := Conn()
+	defer conn.Close()
+	client := protobuf.NewMyGrpcClient(conn)
 	//双向直接返回
 	s, err := client.Hello(context.Background(), &protobuf.String{Value: "hi"})
 	if err != nil {
@@ -82,6 +95,10 @@ func Run() {
 }
 
 func Conn() *grpc.ClientConn {
+	auth := &Authentication{
+		User:     "alpha",
+		Password: "123456",
+	}
 	certificate, err := tls.LoadX509KeyPair("key/client.crt", "key/client.key")
 	if err != nil {
 		log.Fatal(err)
@@ -101,9 +118,9 @@ func Conn() *grpc.ClientConn {
 		ServerName:   "server.io", // NOTE: this is required!
 		RootCAs:      certPool,
 	})
-	conn, err := grpc.Dial(":1234", grpc.WithTransportCredentials(creds))
+	conn, err := grpc.Dial(":1234", grpc.WithTransportCredentials(creds), grpc.WithPerRPCCredentials(auth))
 	if err != nil {
-		log.Fatal(err)
+		return Conn()
 	}
 	return conn
 }

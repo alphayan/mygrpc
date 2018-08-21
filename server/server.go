@@ -103,7 +103,7 @@ func Run() {
 		ClientAuth:   tls.RequireAndVerifyClientCert, // NOTE: this is optional!
 		ClientCAs:    certPool,
 	})
-	grpcServer := grpc.NewServer(grpc.Creds(creds))
+	grpcServer := grpc.NewServer(grpc.Creds(creds), grpc.UnaryInterceptor(ChainUnaryServer(filter, filter1, filter2)))
 	protobuf.RegisterMyGrpcServer(grpcServer, new(g))
 	protobuf.RegisterPubsubServerServer(grpcServer, NewPubsubService())
 	lis, err := net.Listen("tcp", ":1234")

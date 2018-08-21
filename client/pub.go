@@ -7,7 +7,9 @@ import (
 )
 
 func Pub() {
-	sub := protobuf.NewPubsubServerClient(Conn())
+	conn := Conn()
+	defer conn.Close()
+	sub := protobuf.NewPubsubServerClient(conn)
 	ctx := context.Background()
 	if _, err := sub.Publish(ctx, &protobuf.String{Value: "golang: hello golang"}); err != nil {
 		log.Fatal(err)
